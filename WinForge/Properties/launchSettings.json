@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "WinForge (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "WinForge (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

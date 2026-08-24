@@ -1,0 +1,25 @@
+<Page
+    x:Class="WinForge.Views.AutounattendPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ScrollViewer Padding="16">
+        <StackPanel Spacing="10">
+            <TextBlock Text="Autounattend XML" Foreground="{StaticResource WFTextBrush}" FontSize="16" FontWeight="SemiBold"/>
+
+            <TextBox x:Name="TxtUsername" Header="Nom utilisateur" PlaceholderText="Admin" TextChanged="TxtUsername_TextChanged"/>
+            <PasswordBox x:Name="TxtPassword" Header="Mot de passe" PasswordChanged="TxtPassword_PasswordChanged"/>
+            <CheckBox x:Name="ChkAutoLogon" Content="Connexion automatique" Checked="ChkAutoLogon_Changed" Unchecked="ChkAutoLogon_Changed"/>
+            <CheckBox x:Name="ChkSkipOOBE" Content="Ignorer OOBE" IsChecked="True" Checked="ChkSkipOOBE_Changed" Unchecked="ChkSkipOOBE_Changed"/>
+            <CheckBox x:Name="ChkBypassSystemRequirements" Content="Contourner les prérequis (TPM 2.0 / Secure Boot / RAM / CPU)" Checked="ChkBypassSystemRequirements_Changed" Unchecked="ChkBypassSystemRequirements_Changed"/>
+
+            <Button x:Name="BtnGenerateXml" Content="🔧 Générer XML" Click="BtnGenerateXml_Click"/>
+
+            <TextBox x:Name="XmlPreview"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     Height="260"
+                     FontFamily="Consolas"/>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

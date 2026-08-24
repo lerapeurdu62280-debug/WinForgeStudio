@@ -1,0 +1,32 @@
+# Build artifacts
+[Bb]in/
+[Oo]bj/
+*.appx
+*.appxbundle
+*.appxupload
+*.msix
+*.msixbundle
+AppPackages/
+BundleArtifacts/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Runtime work artifacts (ISO builds, mounts, logs)
+WinForge/Work/
+*.iso
+*.wim
+*.esd
+*.vhd
+*.vhdx
+
+# Profiles utilisateur (peuvent contenir des chemins locaux/mots de passe)
+*.wfp
+
+# OS
+Thumbs.db
+desktop.ini

@@ -1,0 +1,76 @@
+<Page
+    x:Class="WinForge.Views.DebloatingPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:WinForge.Views"
+    xmlns:models="using:WinForge.Models"
+    xmlns:conv="using:WinForge.Converters"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Page.Resources>
+        <conv:HexColorToBrushConverter x:Key="HexColorToBrushConverter"/>
+    </Page.Resources>
+
+    <Grid Padding="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Spacing="8">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button x:Name="BtnSelectAll" Content="✅ Tout sélectionner" Click="BtnSelectAll_Click"/>
+                <Button x:Name="BtnDeselectAll" Content="❌ Tout désélectionner" Click="BtnDeselectAll_Click"/>
+                <Button x:Name="BtnSafeOnly" Content="🟢 Sûrs uniquement" Click="BtnSafeOnly_Click"/>
+            </StackPanel>
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="1" Margin="0,12,0,12">
+            <ItemsControl x:Name="CategoriesList" ItemsSource="{x:Bind Categories}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="models:AppEntry">
+                        <StackPanel Margin="0,0,0,14">
+                            <CheckBox IsChecked="{x:Bind IsSelected, Mode=TwoWay}"
+                                      Checked="CategoryCheckBox_Changed" Unchecked="CategoryCheckBox_Changed">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <TextBlock Text="{x:Bind RiskLabel}"/>
+                                    <TextBlock Text="{x:Bind Name}" Foreground="{StaticResource WFTextBrush}" FontSize="14" FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </CheckBox>
+
+                            <ItemsControl ItemsSource="{x:Bind Children}" Margin="26,4,0,0">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="models:AppEntry">
+                                        <Border Margin="0,3" Padding="10" Background="{StaticResource WFCard2Brush}" CornerRadius="6">
+                                            <Grid ColumnSpacing="10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="20"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <CheckBox IsChecked="{x:Bind IsSelected, Mode=TwoWay}"
+                                                          Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"/>
+                                                <Ellipse Grid.Column="1" Width="10" Height="10" VerticalAlignment="Center"
+                                                         Fill="{x:Bind RiskColor, Converter={StaticResource HexColorToBrushConverter}}"/>
+                                                <StackPanel Grid.Column="2">
+                                                    <TextBlock Text="{x:Bind Name}" Foreground="{StaticResource WFTextBrush}" FontSize="13" FontWeight="SemiBold"/>
+                                                    <TextBlock Text="{x:Bind Description}" Foreground="{StaticResource WFMutedBrush}" FontSize="11"/>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="3" Text="{x:Bind PackageName}" Foreground="{StaticResource WFMuted2Brush}" FontSize="10" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <TextBlock Grid.Row="2" x:Name="SummaryText" HorizontalAlignment="Right" Foreground="{StaticResource WFMutedBrush}" Text="0 application sélectionnée"/>
+    </Grid>
+</Page>
