@@ -22,9 +22,7 @@ namespace WinForge
         private readonly AutounattendService _autounattendService = new();
         private readonly IsoBuilderService _isoBuilderService = new();
         private readonly OptimisationService _optimisationService = new();
-        private readonly WallpaperService _wallpaperService = new();
         private readonly UsbWriterService _usbWriterService = new();
-        private readonly InternalAppScannerService _internalAppScannerService = new();
         private string _isoPath = "";
 
         // Source de vérité unique pour l'état des modules. Le Frame de navigation détruit les
@@ -41,9 +39,7 @@ namespace WinForge
         public AutounattendService AutounattendService => _autounattendService;
         public IsoBuilderService IsoBuilderService => _isoBuilderService;
         public OptimisationService OptimisationService => _optimisationService;
-        public WallpaperService WallpaperService => _wallpaperService;
         public UsbWriterService UsbWriterService => _usbWriterService;
-        public InternalAppScannerService InternalAppScannerService => _internalAppScannerService;
 
         public object? CurrentModulePage => ModuleFrame.Content;
 

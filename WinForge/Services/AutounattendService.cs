@@ -25,7 +25,7 @@ public class AutounattendService
         sb.AppendLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
         sb.AppendLine("<unattend xmlns=\"urn:schemas-microsoft-com:unattend\">");
 
-        bool needsOemCopy = options.AppsToInstall.Count > 0 || options.HasWallpaper;
+        bool needsOemCopy = options.AppsToInstall.Count > 0;
 
         sb.AppendLine("  <settings pass=\"windowsPE\">");
         sb.AppendLine("    <component name=\"Microsoft-Windows-Setup\" processorArchitecture=\"amd64\" publicKeyToken=\"31bf3856ad364e35\" language=\"neutral\" versionScope=\"nonSxS\">");
@@ -127,7 +127,7 @@ public class AutounattendService
             sb.AppendLine("      <OOBE><SkipMachineOOBE>false</SkipMachineOOBE></OOBE>");
         }
 
-        bool needsAssistantStartup = options.AppsToInstall.Count > 0 || options.HasWallpaper;
+        bool needsAssistantStartup = options.AppsToInstall.Count > 0;
 
         sb.AppendLine("      <FirstLogonCommands>");
         int cmdOrder = 1;
@@ -157,8 +157,8 @@ public class AutounattendService
 
             // Ancienne approche abandonnée n°1 : schtasks /RU SYSTEM déclenché en FirstLogonCommands.
             // SYSTEM n'a pas de profil utilisateur : winget introuvable, installeurs perMachine:false
-            // installés dans un profil invisible, wallpaper nécessitant patch HKEY_USERS + kill
-            // d'explorer.exe — c'est CE kill qui bloquait l'OOBE, pas FirstLogonCommands en soi.
+            // installés dans un profil invisible — problèmes qui rendaient cette approche fragile,
+            // pas FirstLogonCommands en soi.
             //
             // Ancienne approche abandonnée n°2 : raccourci dans le dossier Startup. Fonctionnait,
             // mais l'assistant n'apparaissait qu'APRÈS l'arrivée sur le bureau (demande explicite de
@@ -193,7 +193,7 @@ public class AutounattendService
     private static string GetCopiedInstallerFileName(AppInstallEntry app, int index)
         => $"{index:D2}_{Path.GetFileName(app.InstallerPath)}";
 
-    // Copie les installeurs custom (SOSINFOLUDO + ajouts manuels) dans $OEM$\$1\Setup\Scripts\Apps.
+    // Copie les installeurs custom (ajouts manuels) dans $OEM$\$1\Setup\Scripts\Apps.
     // Windows Setup copie automatiquement tout $OEM$\$1\... vers C:\ pendant l'installation, avant
     // même le premier logon. WinForge Assistant (voir WriteAssistantToWorkspaceAsync) scanne ensuite
     // ce même dossier une fois lancé dans la session utilisateur, pour proposer ces installeurs.

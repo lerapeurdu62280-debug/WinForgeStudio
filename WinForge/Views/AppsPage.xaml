@@ -13,51 +13,7 @@
                            Foreground="{StaticResource WFMuted2Brush}" FontSize="12" TextWrapping="Wrap"/>
             </StackPanel>
 
-            <!-- Onglets custom (pas de Pivot WinUI3) : son style d'en-tête par défaut est pensé
-                 pour un titre de page plein écran (police énorme, soulignement épais coloré), pas
-                 un onglet compact — reproduit ici la même structure que la maquette validée
-                 (.tab / .tab.active). -->
-            <StackPanel Orientation="Horizontal" Spacing="2">
-                <Button x:Name="TabInternalButton" Style="{StaticResource WFTabButtonStyle}" Click="TabInternal_Click">
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock Text="Suite SOSINFOLUDO" FontSize="12.5" FontWeight="SemiBold"/>
-                        <Border Style="{StaticResource WFCountBadgeStyle}">
-                            <TextBlock x:Name="InternalTabCountText" Text="0/0" FontSize="10" FontFamily="Consolas" Foreground="{StaticResource WFAccentBrush}"/>
-                        </Border>
-                    </StackPanel>
-                </Button>
-                <Button x:Name="TabCustomButton" Style="{StaticResource WFTabButtonStyle}" Click="TabCustom_Click">
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock Text="Installeurs externes" FontSize="12.5" FontWeight="SemiBold"/>
-                        <Border Style="{StaticResource WFCountBadgeStyle}">
-                            <TextBlock x:Name="CustomTabCountText" Text="0" FontSize="10" FontFamily="Consolas" Foreground="{StaticResource WFAccentBrush}"/>
-                        </Border>
-                    </StackPanel>
-                </Button>
-            </StackPanel>
-            <Border BorderBrush="{StaticResource WFBorderBrush}" BorderThickness="0,1,0,0" Margin="0,-8,0,0"/>
-
-            <StackPanel x:Name="InternalTabContent" Spacing="12">
-                <TextBlock Text="Détectés dans C:\Users\Admin\SOSINFOLUDO — versions Owner uniquement, jamais les variantes client."
-                           Foreground="{StaticResource WFMuted2Brush}" FontSize="12" TextWrapping="Wrap"/>
-
-                <Button x:Name="BtnScanInternalApps" Content="🔍 Scanner SOSINFOLUDO" Click="BtnScanInternalApps_Click" HorizontalAlignment="Left"/>
-
-                <ItemsControl x:Name="InternalAppsList" ItemsSource="{x:Bind InternalApps}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="models:AppInstallEntry">
-                            <Grid Padding="4,7" ColumnDefinitions="Auto,*,Auto">
-                                <CheckBox Grid.Column="0" Content="{x:Bind Name}" IsChecked="{x:Bind IsChecked, Mode=TwoWay}" Checked="InternalAppCheckBox_Changed" Unchecked="InternalAppCheckBox_Changed"/>
-                                <TextBlock Grid.Column="2" Text="{x:Bind InstallerPath}" FontFamily="Consolas" FontSize="10" Foreground="{StaticResource WFMuted2Brush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="320"/>
-                            </Grid>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-
-                <TextBlock x:Name="InternalAppsSummaryText" Text="Clique sur « Scanner » pour détecter tes logiciels." Foreground="{StaticResource WFMuted2Brush}" FontSize="12"/>
-            </StackPanel>
-
-            <StackPanel x:Name="CustomTabContent" Spacing="12" Visibility="Collapsed">
+            <StackPanel Spacing="12">
                 <TextBlock Text="Vos propres .exe/.msi (ex. outils tiers) : copiés dans l'ISO et proposés par WinForge Assistant."
                            Foreground="{StaticResource WFMuted2Brush}" FontSize="12" TextWrapping="Wrap"/>
 
@@ -76,19 +32,6 @@
                     <Button x:Name="BtnAddCustomApp" Content="➕ Ajouter un installeur..." Click="BtnAddCustomApp_Click"/>
                     <Button x:Name="BtnRemoveCustomApp" Content="🗑️ Retirer la sélection" Click="BtnRemoveCustomApp_Click"/>
                 </StackPanel>
-            </StackPanel>
-
-            <Border BorderBrush="{StaticResource WFBorderBrush}" BorderThickness="0,1,0,0" Margin="0,4,0,0"/>
-
-            <StackPanel Spacing="4">
-                <TextBlock Text="Fond d'écran par défaut" Foreground="{StaticResource WFTextBrush}" FontSize="14" FontWeight="SemiBold"/>
-                <TextBlock Text="Remplace l'image par défaut de Windows (appliqué hors-ligne, avant même le premier démarrage)."
-                           Foreground="{StaticResource WFMuted2Brush}" FontSize="12" TextWrapping="Wrap"/>
-            </StackPanel>
-
-            <StackPanel Orientation="Horizontal" Spacing="8">
-                <Button x:Name="BtnPickWallpaper" Content="🖼️ Choisir une image..." Click="BtnPickWallpaper_Click"/>
-                <TextBlock x:Name="WallpaperPathText" Text="Aucune image sélectionnée" Foreground="{StaticResource WFMuted2Brush}" FontSize="12" VerticalAlignment="Center"/>
             </StackPanel>
 
         </StackPanel>

@@ -108,8 +108,7 @@ namespace WinForge.Views
                 AutoLogon = state.AutoLogon,
                 SkipOobe = state.SkipOobe,
                 BypassSystemRequirements = state.BypassSystemRequirements,
-                AppsToInstall = state.AppsToInstall,
-                HasWallpaper = !string.IsNullOrWhiteSpace(state.WallpaperPath)
+                AppsToInstall = state.AppsToInstall
             };
 
             var optimisationOptions = new OptimisationOptions
@@ -240,11 +239,6 @@ namespace WinForge.Views
                             reporter.SetStatus("Préparation des applications à installer...");
                             await mw.AutounattendService.WriteAppsToWorkspaceAsync(autounattendOptions.AppsToInstall, workspace.IsoExtractDir, reporter);
                             await mw.AutounattendService.WriteAssistantToWorkspaceAsync(workspace.IsoExtractDir, reporter);
-                        }
-
-                        if (autounattendOptions.HasWallpaper)
-                        {
-                            await mw.WallpaperService.WriteToWorkspaceAsync(state.WallpaperPath!, null, workspace.IsoExtractDir, reporter);
                         }
                     }
 

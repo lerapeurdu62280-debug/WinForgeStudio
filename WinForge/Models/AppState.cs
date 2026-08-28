@@ -33,7 +33,4 @@ public class AppState
 
     // Apps installées au premier démarrage (winget silencieux + installeurs .exe/.msi maison).
     public List<AppInstallEntry> AppsToInstall { get; set; } = new();
-
-    // Image remplaçant le fond d'écran par défaut de Windows (appliquée offline, pendant le montage WIM).
-    public string? WallpaperPath { get; set; }
 }
