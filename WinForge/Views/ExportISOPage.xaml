@@ -15,6 +15,23 @@
 
             <ProgressBar x:Name="BuildProgressBar" Minimum="0" Maximum="100" Value="0"/>
             <TextBlock x:Name="BuildStatusText" Text="En attente..." Foreground="{StaticResource WFMutedBrush}"/>
+
+            <Border BorderBrush="{StaticResource WFBorderBrush}" BorderThickness="0,1,0,0" Margin="0,8,0,0"/>
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="Clé USB bootable" Foreground="{StaticResource WFTextBrush}" FontSize="16" FontWeight="SemiBold"/>
+                <TextBlock Text="Efface entièrement la clé sélectionnée et y copie l'ISO construite, prête à démarrer." Foreground="{StaticResource WFMutedBrush}" FontSize="12" TextWrapping="Wrap"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <ComboBox x:Name="UsbDeviceComboBox" Width="360" DisplayMemberPath="DisplayLabel" PlaceholderText="Aucune clé détectée"/>
+                <Button x:Name="BtnRefreshUsb" Content="🔄 Actualiser" Click="BtnRefreshUsb_Click"/>
+            </StackPanel>
+
+            <Button x:Name="BtnWriteUsb" Content="💾 Graver sur la clé USB" Click="BtnWriteUsb_Click" Background="{StaticResource WFAccent2Brush}" Foreground="White"/>
+
+            <ProgressBar x:Name="UsbProgressBar" Minimum="0" Maximum="100" Value="0"/>
+            <TextBlock x:Name="UsbStatusText" Text="En attente..." Foreground="{StaticResource WFMutedBrush}"/>
         </StackPanel>
     </ScrollViewer>
 </Page>

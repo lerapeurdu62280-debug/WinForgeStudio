@@ -16,13 +16,15 @@ namespace WinForge
 {
     public sealed partial class MainWindow : Window
     {
-        private readonly ProfileService _profileService = new();
         private readonly AdkDetectionService _adkDetectionService = new();
         private readonly DismService _dismService = new();
         private readonly IsoService _isoService = new();
         private readonly AutounattendService _autounattendService = new();
         private readonly IsoBuilderService _isoBuilderService = new();
         private readonly OptimisationService _optimisationService = new();
+        private readonly WallpaperService _wallpaperService = new();
+        private readonly UsbWriterService _usbWriterService = new();
+        private readonly InternalAppScannerService _internalAppScannerService = new();
         private string _isoPath = "";
 
         // Source de vérité unique pour l'état des modules. Le Frame de navigation détruit les
@@ -39,12 +41,32 @@ namespace WinForge
         public AutounattendService AutounattendService => _autounattendService;
         public IsoBuilderService IsoBuilderService => _isoBuilderService;
         public OptimisationService OptimisationService => _optimisationService;
+        public WallpaperService WallpaperService => _wallpaperService;
+        public UsbWriterService UsbWriterService => _usbWriterService;
+        public InternalAppScannerService InternalAppScannerService => _internalAppScannerService;
 
         public object? CurrentModulePage => ModuleFrame.Content;
 
         public MainWindow()
         {
             InitializeComponent();
+
+            // Sans ça, Windows dessine sa propre barre de titre système (fond clair, non thémé)
+            // au-dessus de la topbar custom — visible comme un liseré blanc en haut de la fenêtre.
+            ExtendsContentIntoTitleBar = true;
+            SetTitleBar(AppTitleBar);
+
+            // Les boutons système (minimiser/agrandir/fermer) restent dessinés par Windows dans le
+            // coin supérieur droit de AppTitleBar : sans ceci ils gardent leurs couleurs claires par
+            // défaut, qui détonnent sur un fond sombre.
+            var titleBar = AppWindow.TitleBar;
+            titleBar.ButtonBackgroundColor = Windows.UI.Color.FromArgb(0, 0, 0, 0);
+            titleBar.ButtonInactiveBackgroundColor = Windows.UI.Color.FromArgb(0, 0, 0, 0);
+            titleBar.ButtonForegroundColor = Windows.UI.Color.FromArgb(255, 0xE4, 0xE7, 0xEB);
+            titleBar.ButtonHoverBackgroundColor = Windows.UI.Color.FromArgb(255, 0x2A, 0x30, 0x38);
+            titleBar.ButtonHoverForegroundColor = Windows.UI.Color.FromArgb(255, 0xE4, 0xE7, 0xEB);
+            titleBar.ButtonPressedBackgroundColor = Windows.UI.Color.FromArgb(255, 0x1C, 0x2E, 0x40);
+
             ModuleFrame.Navigate(typeof(ExportISOPage));
             _ = InitializeStartupChecksAsync();
         }
@@ -78,19 +100,20 @@ namespace WinForge
             }
         }
 
-        public string GetCurrentIsoPath()
-        {
-            return _isoPath;
-        }
+        public string GetCurrentIsoPath() => _isoPath;
+        public void SetCurrentIsoPath(string path) => _isoPath = path;
 
         public IntPtr GetWindowHandle() => WindowNative.GetWindowHandle(this);
+
+        public System.Collections.ObjectModel.ObservableCollection<LogEntry> LogEntries { get; } = new();
 
         public void AppendLog(string message)
         {
             // S'assure que la mise à jour de l'UI se fait sur le thread principal
             DispatcherQueue.TryEnqueue(() =>
             {
-                LogText.Text += $"[{DateTime.Now:HH:mm:ss}] {message}{Environment.NewLine}";
+                LogEntries.Add(new LogEntry(message));
+                LogListView.ScrollIntoView(LogEntries[^1]);
             });
         }
 
@@ -99,43 +122,32 @@ namespace WinForge
             StatusLabel.Text = message;
         }
 
-        public void UpdateSelectionCount(int count)
-        {
-            SelectionCountLabel.Text = count <= 1
-                ? $"{count} élément sélectionné"
-                : $"{count} éléments sélectionnés";
-        }
+        // Barres de progression désormais sans UI (l'ancien panneau latéral droit a été retiré) :
+        // les appels restent des no-op silencieux plutôt que de modifier les 3 pages qui les
+        // invoquent (DebloatingPage, InjectionPage, ExportISOPage) pour un affichage qui n'a plus
+        // d'emplacement dans la maquette actuelle.
+        public void UpdateSelectionCount(int count) { }
+        public void UpdateDebloatProgress(double value) { }
+        public void UpdateInjectProgress(double value) { }
+        public void UpdateUpdateProgress(double value) { }
 
-        public void UpdateDebloatProgress(double value) => DebloatProgress.Value = value;
-        public void UpdateInjectProgress(double value) => InjectProgress.Value = value;
-        public void UpdateUpdateProgress(double value) => UpdateProgress.Value = value;
-
+        // Seule source de vérité pour ces réglages (State.DisableTelemetry etc.) : la case cochée
+        // sur OptimisationPage elle-même. Il n'y a plus de toggle miroir dans un panneau global.
         public void SyncGlobalOptimisationToggle(string toggleName, bool value)
         {
             switch (toggleName)
             {
-                case "ToggleTelemetry": GlobalTelemetryToggle.IsOn = value; State.DisableTelemetry = value; break;
-                case "ToggleCortana": GlobalCortanaToggle.IsOn = value; State.DisableCortana = value; break;
-                case "ToggleServices": GlobalServicesToggle.IsOn = value; State.OptimizeServices = value; break;
-                case "TogglePerf": GlobalPerfToggle.IsOn = value; State.PerformanceMode = value; break;
+                case "ToggleTelemetry": State.DisableTelemetry = value; break;
+                case "ToggleCortana": State.DisableCortana = value; break;
+                case "ToggleServices": State.OptimizeServices = value; break;
+                case "TogglePerf": State.PerformanceMode = value; break;
             }
         }
 
-        private void GlobalOptimToggle_Toggled(object sender, RoutedEventArgs e)
+        private void NavEditions_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is not ToggleSwitch toggle)
-                return;
-
-            switch (toggle.Name)
-            {
-                case "GlobalTelemetryToggle": State.DisableTelemetry = toggle.IsOn; break;
-                case "GlobalCortanaToggle": State.DisableCortana = toggle.IsOn; break;
-                case "GlobalServicesToggle": State.OptimizeServices = toggle.IsOn; break;
-                case "GlobalPerfToggle": State.PerformanceMode = toggle.IsOn; break;
-            }
-
-            if (ModuleFrame.Content is OptimisationPage optimPage)
-                optimPage.RefreshFromState();
+            ModuleFrame.Navigate(typeof(EditionsPage));
+            SetStatus("Module Éditions");
         }
 
         private void NavDebloat_Click(object sender, RoutedEventArgs e)
@@ -148,6 +160,12 @@ namespace WinForge
         {
             ModuleFrame.Navigate(typeof(OptimisationPage));
             SetStatus("Module Optimisation");
+        }
+
+        private void NavApps_Click(object sender, RoutedEventArgs e)
+        {
+            ModuleFrame.Navigate(typeof(AppsPage));
+            SetStatus("Module Applications");
         }
 
         private void NavInject_Click(object sender, RoutedEventArgs e)
@@ -174,183 +192,5 @@ namespace WinForge
             SetStatus("Prêt pour la construction ISO");
         }
 
-        private async void BtnOpenISO_Click(object sender, RoutedEventArgs e)
-        {
-            FileOpenPicker picker = new();
-            picker.FileTypeFilter.Add(".iso");
-            InitializeWithWindow.Initialize(picker, GetWindowHandle());
-
-            StorageFile? file = await picker.PickSingleFileAsync();
-            if (file == null)
-                return;
-
-            _isoPath = file.Path;
-            IsoNameLabel.Text = file.Name;
-            IsoVersionLabel.Text = "Version : Windows ISO détectée";
-            IsoSizeLabel.Text = $"Taille : {new FileInfo(file.Path).Length / (1024 * 1024)} Mo";
-            EstimatedSizeLabel.Text = "Taille estimée : analyse en attente";
-
-            AppendLog($"ISO chargée : {file.Name}");
-            SetStatus("ISO chargée");
-
-            await LoadEditionsAsync(_isoPath);
-        }
-
-        private async Task LoadEditionsAsync(string isoPath)
-        {
-            EditionComboBox.IsEnabled = false;
-            EditionComboBox.ItemsSource = null;
-
-            var reporter = new UiProgressReporter(this, "Éditions");
-            bool mounted = false;
-
-            try
-            {
-                var mountResult = await _isoService.MountIsoAsync(isoPath, reporter);
-                mounted = true;
-
-                string installImage = _isoService.LocateInstallImage(mountResult.DriveLetter);
-                var editions = await _isoService.GetEditionsAsync(installImage, reporter);
-
-                await _isoService.DismountIsoAsync(isoPath, reporter);
-                mounted = false;
-
-                if (editions.Count == 0)
-                {
-                    AppendLog("[Éditions] Aucune édition détectée, index 1 utilisé par défaut.");
-                    return;
-                }
-
-                EditionComboBox.ItemsSource = editions;
-                EditionComboBox.SelectedIndex = 0;
-                EditionComboBox.IsEnabled = editions.Count > 1;
-                State.EditionIndex = editions[0].Index;
-            }
-            catch (Exception ex)
-            {
-                AppendLog($"[Éditions] Échec de la lecture des éditions ({ex.Message}), index 1 utilisé par défaut.");
-                State.EditionIndex = 1;
-            }
-            finally
-            {
-                if (mounted)
-                {
-                    try { await _isoService.DismountIsoAsync(isoPath, reporter); }
-                    catch (Exception ex) { AppendLog($"[Éditions] Échec du démontage de nettoyage : {ex.Message}"); }
-                }
-            }
-        }
-
-        private void EditionComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (EditionComboBox.SelectedItem is Services.Models.WimEditionInfo edition)
-                State.EditionIndex = edition.Index;
-        }
-
-        private ProfileData BuildProfileFromUi()
-        {
-            return new ProfileData
-            {
-                IsoPath = _isoPath,
-                DisableTelemetry = State.DisableTelemetry,
-                DisableCortana = State.DisableCortana,
-                OptimizeServices = State.OptimizeServices,
-                PerformanceMode = State.PerformanceMode,
-                OutputIsoName = State.OutputIsoName,
-                BuildBootable = State.BuildBootable,
-                InjectAutounattend = State.InjectAutounattend,
-                Username = State.Username,
-                AutoLogon = State.AutoLogon,
-                SkipOobe = State.SkipOobe,
-                Drivers = new List<string>(State.DriverPaths),
-                Updates = new List<string>(State.UpdatePaths)
-            };
-        }
-
-        private async void BtnSaveProfile_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                FileSavePicker picker = new();
-                picker.SuggestedFileName = "winforge-profile";
-                picker.FileTypeChoices.Add("WinForge Profile", new List<string> { ".wfp" });
-                picker.FileTypeChoices.Add("JSON", new List<string> { ".json" });
-                InitializeWithWindow.Initialize(picker, GetWindowHandle());
-
-                StorageFile? file = await picker.PickSaveFileAsync();
-                if (file == null)
-                    return;
-
-                var profile = BuildProfileFromUi();
-                await _profileService.SaveProfileAsync(file.Path, profile);
-
-                AppendLog($"Profil sauvegardé : {file.Name}");
-                SetStatus("Profil sauvegardé");
-            }
-            catch (Exception ex)
-            {
-                AppendLog("Erreur sauvegarde profil : " + ex.Message);
-                SetStatus("Erreur sauvegarde");
-            }
-        }
-
-        private async void BtnLoadProfile_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                FileOpenPicker picker = new();
-                picker.FileTypeFilter.Add(".wfp");
-                picker.FileTypeFilter.Add(".json");
-                InitializeWithWindow.Initialize(picker, GetWindowHandle());
-
-                StorageFile? file = await picker.PickSingleFileAsync();
-                if (file == null)
-                    return;
-
-                var profile = await _profileService.LoadProfileAsync(file.Path);
-                if (profile == null)
-                    return;
-
-                _isoPath = profile.IsoPath;
-                GlobalTelemetryToggle.IsOn = profile.DisableTelemetry;
-                GlobalCortanaToggle.IsOn = profile.DisableCortana;
-                GlobalServicesToggle.IsOn = profile.OptimizeServices;
-                GlobalPerfToggle.IsOn = profile.PerformanceMode;
-
-                State.DisableTelemetry = profile.DisableTelemetry;
-                State.DisableCortana = profile.DisableCortana;
-                State.OptimizeServices = profile.OptimizeServices;
-                State.PerformanceMode = profile.PerformanceMode;
-                State.OutputIsoName = profile.OutputIsoName;
-                State.BuildBootable = profile.BuildBootable;
-                State.InjectAutounattend = profile.InjectAutounattend;
-                State.Username = profile.Username;
-                State.AutoLogon = profile.AutoLogon;
-                State.SkipOobe = profile.SkipOobe;
-                State.DriverPaths = new List<string>(profile.Drivers);
-                State.UpdatePaths = new List<string>(profile.Updates);
-
-                if (IsoNameLabel != null)
-                {
-                    IsoNameLabel.Text = string.IsNullOrWhiteSpace(_isoPath) ? "Aucune ISO chargée" : Path.GetFileName(_isoPath);
-                }
-
-                if (!string.IsNullOrWhiteSpace(_isoPath) && File.Exists(_isoPath))
-                {
-                    _ = LoadEditionsAsync(_isoPath);
-                }
-
-                ProfileSelector.Items.Add(profile.ProfileName);
-                ProfileSelector.SelectedItem = profile.ProfileName;
-
-                AppendLog($"Profil chargé : {file.Name}");
-                SetStatus("Profil chargé");
-            }
-            catch (Exception ex)
-            {
-                AppendLog("Erreur chargement profil : " + ex.Message);
-                SetStatus("Erreur chargement");
-            }
-        }
     }
 }

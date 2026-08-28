@@ -2,35 +2,270 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <SolidColorBrush x:Key="WFBackgroundBrush" Color="#171717" />
-    <SolidColorBrush x:Key="WFPanelBrush" Color="#1B1B1B" />
-    <SolidColorBrush x:Key="WFCardBrush" Color="#232323" />
-    <SolidColorBrush x:Key="WFCard2Brush" Color="#262626" />
-    <SolidColorBrush x:Key="WFBorderBrush" Color="#2B2B2B" />
-    <SolidColorBrush x:Key="WFAccentBrush" Color="#2563EB" />
-    <SolidColorBrush x:Key="WFAccent2Brush" Color="#16A34A" />
-    <SolidColorBrush x:Key="WFTextBrush" Color="#FFFFFF" />
-    <SolidColorBrush x:Key="WFMutedBrush" Color="#9CA3AF" />
-    <SolidColorBrush x:Key="WFMuted2Brush" Color="#7B7B7B" />
-    <SolidColorBrush x:Key="WFWarningBrush" Color="#F59E0B" />
+    <!-- Palette reprise de la maquette validée (thème sombre dense façon Activity Monitor) —
+         partagée avec WinForge Assistant pour une identité visuelle cohérente entre les deux
+         logiciels de la suite (voir C:\Dev\WinForgeAssistant\Themes\WinForgeAssistantTheme.xaml).
+         Les Color nommées existent séparément des Brush pour pouvoir surcharger les ThemeResource
+         Fluent (ToggleSwitch, CheckBox, ComboBox...) qui attendent une Color, pas un Brush. -->
+    <Color x:Key="WFBackgroundColor">#0D0F13</Color>
+    <Color x:Key="WFPanelColor">#12151A</Color>
+    <Color x:Key="WFCardColor">#171B22</Color>
+    <Color x:Key="WFCard2Color">#1C212A</Color>
+    <Color x:Key="WFBorderColor">#2A3038</Color>
+    <Color x:Key="WFAccentColor">#4F9DDE</Color>
+    <Color x:Key="WFAccentSoftColor">#1C2E40</Color>
+    <Color x:Key="WFAccent2Color">#3FB87F</Color>
+    <Color x:Key="WFTextColor">#E4E7EB</Color>
+    <Color x:Key="WFMutedColor">#9AA2AD</Color>
+    <Color x:Key="WFMuted2Color">#626A75</Color>
+    <Color x:Key="WFWarningColor">#E0A83F</Color>
 
-    <Style x:Key="WFNavButtonStyle" TargetType="Button">
-        <Setter Property="Background" Value="{StaticResource WFCardBrush}" />
-        <Setter Property="Foreground" Value="{StaticResource WFTextBrush}" />
-        <Setter Property="HorizontalAlignment" Value="Stretch" />
-        <Setter Property="Padding" Value="12,10" />
-        <Setter Property="Margin" Value="0,0,0,6" />
+    <SolidColorBrush x:Key="WFBackgroundBrush" Color="{StaticResource WFBackgroundColor}" />
+    <SolidColorBrush x:Key="WFPanelBrush" Color="{StaticResource WFPanelColor}" />
+    <SolidColorBrush x:Key="WFCardBrush" Color="{StaticResource WFCardColor}" />
+    <SolidColorBrush x:Key="WFCard2Brush" Color="{StaticResource WFCard2Color}" />
+    <SolidColorBrush x:Key="WFBorderBrush" Color="{StaticResource WFBorderColor}" />
+    <SolidColorBrush x:Key="WFAccentBrush" Color="{StaticResource WFAccentColor}" />
+    <SolidColorBrush x:Key="WFAccentSoftBrush" Color="{StaticResource WFAccentSoftColor}" />
+    <SolidColorBrush x:Key="WFAccent2Brush" Color="{StaticResource WFAccent2Color}" />
+    <SolidColorBrush x:Key="WFTextBrush" Color="{StaticResource WFTextColor}" />
+    <SolidColorBrush x:Key="WFMutedBrush" Color="{StaticResource WFMutedColor}" />
+    <SolidColorBrush x:Key="WFMuted2Brush" Color="{StaticResource WFMuted2Color}" />
+    <SolidColorBrush x:Key="WFWarningBrush" Color="{StaticResource WFWarningColor}" />
+
+    <!-- Surcharge des ThemeResource Fluent globaux : la maquette veut des coins nets à 6px et des
+         boutons compacts, pas la forme "pilule" (CornerRadius ~18-20) du template WinUI3 par
+         défaut. Un simple Setter Property="CornerRadius" sur un Button n'a aucun effet visuel tant
+         que le ControlTemplate lui-même ne lit pas cette valeur : il faut soit surcharger la
+         ressource de thème que le template Fluent référence (ControlCornerRadius), soit fournir un
+         ControlTemplate custom. On fait les deux ici pour un contrôle fiable du rendu. -->
+    <CornerRadius x:Key="ControlCornerRadius">6</CornerRadius>
+    <CornerRadius x:Key="OverlayCornerRadius">8</CornerRadius>
+
+    <x:Double x:Key="WFButtonHeight">32</x:Double>
+
+    <Style x:Key="WFButtonBaseStyle" TargetType="Button">
+        <Setter Property="Height" Value="{StaticResource WFButtonHeight}" />
+        <Setter Property="Padding" Value="13,0" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="RootBorder"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="{TemplateBinding CornerRadius}">
+                        <ContentPresenter Content="{TemplateBinding Content}"
+                                          ContentTemplate="{TemplateBinding ContentTemplate}"
+                                          Foreground="{TemplateBinding Foreground}"
+                                          HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalAlignment="Center"
+                                          Padding="{TemplateBinding Padding}" />
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal" />
+                                <VisualState x:Name="PointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Target="RootBorder.Opacity" Value="0.85" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <VisualState.Setters>
+                                        <Setter Target="RootBorder.Opacity" Value="0.7" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <VisualState.Setters>
+                                        <Setter Target="RootBorder.Opacity" Value="0.45" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
-    <Style x:Key="WFPrimaryButtonStyle" TargetType="Button">
-        <Setter Property="Background" Value="{StaticResource WFAccentBrush}" />
+    <!-- Style implicite (sans x:Key) : s'applique à tout Button de l'app sans style explicite. -->
+    <Style TargetType="Button" BasedOn="{StaticResource WFButtonBaseStyle}">
+        <Setter Property="Background" Value="{StaticResource WFCardBrush}" />
         <Setter Property="Foreground" Value="{StaticResource WFTextBrush}" />
-        <Setter Property="Padding" Value="12,8" />
+        <Setter Property="BorderBrush" Value="{StaticResource WFBorderBrush}" />
+    </Style>
+
+    <Style x:Key="WFNavButtonStyle" TargetType="Button" BasedOn="{StaticResource WFButtonBaseStyle}">
+        <Setter Property="Background" Value="{StaticResource WFCardBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource WFTextBrush}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Left" />
+        <Setter Property="Margin" Value="0,0,0,4" />
+        <Setter Property="FontWeight" Value="Normal" />
+    </Style>
+
+    <Style x:Key="WFPrimaryButtonStyle" TargetType="Button" BasedOn="{StaticResource WFButtonBaseStyle}">
+        <Setter Property="Background" Value="{StaticResource WFAccentBrush}" />
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="BorderThickness" Value="0" />
     </Style>
 
     <Style x:Key="WFCardBorderStyle" TargetType="Border">
         <Setter Property="Background" Value="{StaticResource WFCardBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource WFBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="8" />
         <Setter Property="Padding" Value="12" />
+    </Style>
+
+    <!-- ToggleSwitch/CheckBox/ComboBox : le template Fluent par défaut ne lit pas un Setter direct
+         sur ces contrôles pour sa couleur "actif" (vert système Windows) — il faut surcharger les
+         ThemeResource que son ControlTemplate référence réellement. Ces clés sont celles du thème
+         Fluent standard (Microsoft.UI.Xaml), pas des noms inventés. -->
+    <SolidColorBrush x:Key="ToggleSwitchFillOn" Color="{StaticResource WFAccentColor}" />
+    <SolidColorBrush x:Key="ToggleSwitchFillOnPointerOver" Color="{StaticResource WFAccentColor}" Opacity="0.85" />
+    <SolidColorBrush x:Key="ToggleSwitchFillOnPressed" Color="{StaticResource WFAccentColor}" Opacity="0.7" />
+    <SolidColorBrush x:Key="ToggleSwitchStrokeOn" Color="{StaticResource WFAccentColor}" />
+    <SolidColorBrush x:Key="ToggleSwitchStrokeOnPointerOver" Color="{StaticResource WFAccentColor}" />
+
+    <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillChecked" Color="{StaticResource WFAccentColor}" />
+    <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeChecked" Color="{StaticResource WFAccentColor}" />
+    <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPointerOver" Color="{StaticResource WFAccentColor}" Opacity="0.85" />
+    <CornerRadius x:Key="CheckBoxCornerRadius">4</CornerRadius>
+
+    <!-- Les ThemeResource ci-dessus ne suffisent pas à changer la FORME de l'indicateur (le
+         template Fluent par défaut dessine un carré très arrondi quel que soit CheckBoxCornerRadius
+         dans certaines versions du SDK) : un ControlTemplate minimal reproduit fidèlement le carré
+         net à 4px de la maquette, avec juste les états essentiels (coché/survol/pressé/désactivé). -->
+    <Style TargetType="CheckBox">
+        <Setter Property="Foreground" Value="{StaticResource WFTextBrush}" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="CheckBox">
+                    <Grid ColumnDefinitions="Auto,*" Background="Transparent">
+                        <Border x:Name="CheckBoxIndicator" Grid.Column="0"
+                                Width="18" Height="18" CornerRadius="4"
+                                Background="{StaticResource WFCardBrush}"
+                                BorderBrush="{StaticResource WFBorderBrush}"
+                                BorderThickness="1.5" VerticalAlignment="Center">
+                            <TextBlock x:Name="CheckGlyph" Text="✓" FontSize="12" FontWeight="Bold"
+                                       Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Opacity="0" />
+                        </Border>
+                        <ContentPresenter x:Name="ContentPresenter" Grid.Column="1"
+                                          Content="{TemplateBinding Content}"
+                                          ContentTemplate="{TemplateBinding ContentTemplate}"
+                                          Foreground="{TemplateBinding Foreground}"
+                                          Margin="9,0,0,0" VerticalAlignment="Center" />
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal" />
+                                <VisualState x:Name="PointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Target="CheckBoxIndicator.BorderBrush" Value="{StaticResource WFAccentBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <VisualState.Setters>
+                                        <Setter Target="CheckBoxIndicator.Opacity" Value="0.75" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <VisualState.Setters>
+                                        <Setter Target="CheckBoxIndicator.Opacity" Value="0.45" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                            <VisualStateGroup x:Name="CheckStates">
+                                <VisualState x:Name="Unchecked" />
+                                <VisualState x:Name="Checked">
+                                    <VisualState.Setters>
+                                        <Setter Target="CheckBoxIndicator.Background" Value="{StaticResource WFAccentBrush}" />
+                                        <Setter Target="CheckBoxIndicator.BorderBrush" Value="{StaticResource WFAccentBrush}" />
+                                        <Setter Target="CheckGlyph.Opacity" Value="1" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Indeterminate">
+                                    <VisualState.Setters>
+                                        <Setter Target="CheckBoxIndicator.Background" Value="{StaticResource WFAccentBrush}" />
+                                        <Setter Target="CheckBoxIndicator.BorderBrush" Value="{StaticResource WFAccentBrush}" />
+                                        <Setter Target="CheckGlyph.Text" Value="—" />
+                                        <Setter Target="CheckGlyph.Opacity" Value="1" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <SolidColorBrush x:Key="ComboBoxBackground" Color="{StaticResource WFCardColor}" />
+    <SolidColorBrush x:Key="ComboBoxBorderBrush" Color="{StaticResource WFBorderColor}" />
+    <SolidColorBrush x:Key="ComboBoxForeground" Color="{StaticResource WFTextColor}" />
+    <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="{StaticResource WFCard2Color}" />
+    <CornerRadius x:Key="ComboBoxBorderThemeCornerRadius">6</CornerRadius>
+
+    <!-- TextBox / PasswordBox : mêmes ThemeResource pour les deux (PasswordBox partage le
+         template TextBox dans Fluent). Couvre fond, bordure, texte, et les états focus/hover qui
+         redeviennent clairs par défaut sinon (fond blanc au clic, très visible sur thème sombre). -->
+    <SolidColorBrush x:Key="TextControlBackground" Color="{StaticResource WFCardColor}" />
+    <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="{StaticResource WFCard2Color}" />
+    <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="{StaticResource WFCard2Color}" />
+    <SolidColorBrush x:Key="TextControlBackgroundDisabled" Color="{StaticResource WFCardColor}" />
+    <SolidColorBrush x:Key="TextControlBorderBrush" Color="{StaticResource WFBorderColor}" />
+    <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="{StaticResource WFAccentColor}" />
+    <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="{StaticResource WFAccentColor}" />
+    <SolidColorBrush x:Key="TextControlForeground" Color="{StaticResource WFTextColor}" />
+    <SolidColorBrush x:Key="TextControlForegroundFocused" Color="{StaticResource WFTextColor}" />
+    <SolidColorBrush x:Key="TextControlForegroundPointerOver" Color="{StaticResource WFTextColor}" />
+    <SolidColorBrush x:Key="TextControlPlaceholderForeground" Color="{StaticResource WFMuted2Color}" />
+    <SolidColorBrush x:Key="TextControlHeaderForeground" Color="{StaticResource WFMuted2Color}" />
+    <SolidColorBrush x:Key="TextControlSelectionHighlightColor" Color="{StaticResource WFAccentColor}" />
+    <CornerRadius x:Key="TextControlCornerRadius">6</CornerRadius>
+
+    <!-- ToggleSwitch : même principe que Button/CheckBox — la ThemeResource de couleur seule ne
+         change pas la forme du rail/du pouce, mais son CornerRadius suit déjà celui, plus arrondi,
+         voulu pour un contrôle de type "switch" (contrairement à Button/CheckBox à coins nets) ;
+         seule la couleur "on" doit s'aligner sur l'accent au lieu du vert système. -->
+    <SolidColorBrush x:Key="ToggleSwitchContainerBackground" Color="{StaticResource WFCardColor}" />
+    <SolidColorBrush x:Key="ToggleSwitchFillOff" Color="{StaticResource WFCardColor}" />
+    <SolidColorBrush x:Key="ToggleSwitchStrokeOff" Color="{StaticResource WFBorderColor}" />
+    <SolidColorBrush x:Key="ToggleSwitchKnobFillOff" Color="{StaticResource WFMutedColor}" />
+    <SolidColorBrush x:Key="ToggleSwitchKnobFillOn" Color="White" />
+    <SolidColorBrush x:Key="ToggleSwitchHeaderForeground" Color="{StaticResource WFTextColor}" />
+
+    <!-- Labels de section ("MODULES", "SOURCE ISO"...) : mono, majuscules, letter-spacing —
+         reprend le traitement typographique de la maquette pour ce type de libellé technique. -->
+    <Style x:Key="WFSectionLabelStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource WFMuted2Brush}" />
+        <Setter Property="FontFamily" Value="Consolas" />
+        <Setter Property="FontSize" Value="10.5" />
+        <Setter Property="CharacterSpacing" Value="60" />
+    </Style>
+
+    <!-- Badge de compteur arrondi (en-têtes d'onglets Pivot, résumés). -->
+    <Style x:Key="WFCountBadgeStyle" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource WFAccentSoftBrush}" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Padding" Value="7,1" />
+    </Style>
+
+    <!-- Onglet custom plat (voir AppsPage) : transparent par défaut, l'état actif est géré en
+         code-behind (toggle de style) plutôt que par VisualState, plus simple ici qu'un vrai
+         contrôle à état puisqu'il n'y a que deux onglets fixes. -->
+    <Style x:Key="WFTabButtonStyle" TargetType="Button" BasedOn="{StaticResource WFButtonBaseStyle}">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{StaticResource WFMuted2Brush}" />
+        <Setter Property="BorderThickness" Value="0,0,0,2" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="CornerRadius" Value="0" />
+        <Setter Property="Height" Value="34" />
     </Style>
 </ResourceDictionary>

@@ -1,7 +1,9 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using WinForge.Exceptions;
 using WinForge.Models;
@@ -12,10 +14,14 @@ namespace WinForge.Views
 {
     public sealed partial class ExportISOPage : Page
     {
+        private List<UsbDeviceInfo> _usbDevices = new();
+        private string? _lastBuiltExtractedIsoRoot;
+
         public ExportISOPage()
         {
             InitializeComponent();
             RestoreFromState();
+            _ = RefreshUsbDevicesAsync();
         }
 
         private void RestoreFromState()
@@ -101,7 +107,9 @@ namespace WinForge.Views
                 Password = string.IsNullOrEmpty(state.Password) ? null : state.Password,
                 AutoLogon = state.AutoLogon,
                 SkipOobe = state.SkipOobe,
-                BypassSystemRequirements = state.BypassSystemRequirements
+                BypassSystemRequirements = state.BypassSystemRequirements,
+                AppsToInstall = state.AppsToInstall,
+                HasWallpaper = !string.IsNullOrWhiteSpace(state.WallpaperPath)
             };
 
             var optimisationOptions = new OptimisationOptions
@@ -226,10 +234,25 @@ namespace WinForge.Views
                         // valide pour les options courantes ; sinon régénère à partir de l'état actuel.
                         string xml = state.GeneratedAutounattendXml ?? mw.AutounattendService.GenerateXml(autounattendOptions);
                         await mw.AutounattendService.WriteToWorkspaceAsync(xml, workspace.IsoExtractDir, reporter);
+
+                        if (autounattendOptions.AppsToInstall.Count > 0)
+                        {
+                            reporter.SetStatus("Préparation des applications à installer...");
+                            await mw.AutounattendService.WriteAppsToWorkspaceAsync(autounattendOptions.AppsToInstall, workspace.IsoExtractDir, reporter);
+                            await mw.AutounattendService.WriteAssistantToWorkspaceAsync(workspace.IsoExtractDir, reporter);
+                        }
+
+                        if (autounattendOptions.HasWallpaper)
+                        {
+                            await mw.WallpaperService.WriteToWorkspaceAsync(state.WallpaperPath!, null, workspace.IsoExtractDir, reporter);
+                        }
                     }
 
                     if (buildBootable)
                     {
+                        // L'écran d'accueil WinPE custom (BootUiService) est un chantier volontairement
+                        // indépendant du pipeline principal WinForge Studio — pas d'appel ici. Il sera
+                        // déclenché depuis son propre outil/étape séparée une fois terminé et testé.
                         reporter.SetStatus("Construction de l'ISO bootable...");
                         string oscdimgPath = mw.OscdimgPath ?? throw new WinForgeBuildException("BuildIso", "Chemin oscdimg.exe introuvable.");
                         bool built = await mw.IsoBuilderService.BuildBootableIsoAsync(workspace.IsoExtractDir, job.OutputIsoPath, oscdimgPath, reporter);
@@ -244,6 +267,7 @@ namespace WinForge.Views
                     : $"Image préparée dans : {workspace.IsoExtractDir}";
                 mw.SetStatus("Build terminé");
                 mw.AppendLog("[Export] Job terminé avec succès.");
+                _lastBuiltExtractedIsoRoot = workspace.IsoExtractDir;
             }
             catch (WinForgeBuildException ex)
             {
@@ -283,6 +307,85 @@ namespace WinForge.Views
                 }
 
                 BtnBuild.IsEnabled = true;
+            }
+        }
+
+        private async void BtnRefreshUsb_Click(object sender, RoutedEventArgs e) => await RefreshUsbDevicesAsync();
+
+        private async Task RefreshUsbDevicesAsync()
+        {
+            if (App.MainWindow is not MainWindow mw)
+                return;
+
+            try
+            {
+                _usbDevices = await mw.UsbWriterService.ListUsbDevicesAsync();
+                UsbDeviceComboBox.ItemsSource = _usbDevices;
+                if (_usbDevices.Count > 0)
+                    UsbDeviceComboBox.SelectedIndex = 0;
+                mw.AppendLog($"[USB] {_usbDevices.Count} périphérique(s) USB détecté(s).");
+            }
+            catch (Exception ex)
+            {
+                mw.AppendLog("[USB] Échec de la détection des périphériques : " + ex.Message);
+            }
+        }
+
+        private async void BtnWriteUsb_Click(object sender, RoutedEventArgs e)
+        {
+            if (App.MainWindow is not MainWindow mw)
+                return;
+
+            if (UsbDeviceComboBox.SelectedItem is not UsbDeviceInfo device)
+            {
+                UsbStatusText.Text = "Sélectionnez une clé USB avant de continuer.";
+                return;
+            }
+
+            string? extractedRoot = _lastBuiltExtractedIsoRoot;
+            if (string.IsNullOrEmpty(extractedRoot) || !Directory.Exists(extractedRoot))
+            {
+                UsbStatusText.Text = "Aucune ISO construite dans cette session. Cliquez d'abord sur \"Construire l'ISO\".";
+                return;
+            }
+
+            var confirmDialog = new ContentDialog
+            {
+                Title = "Effacer la clé USB ?",
+                Content = $"Toutes les données de « {device.DisplayLabel} » vont être définitivement effacées et remplacées par l'ISO WinForge. Cette action est irréversible. Continuer ?",
+                PrimaryButtonText = "Effacer et graver",
+                CloseButtonText = "Annuler",
+                DefaultButton = ContentDialogButton.Close,
+                XamlRoot = this.XamlRoot
+            };
+
+            var confirmResult = await confirmDialog.ShowAsync();
+            if (confirmResult != ContentDialogResult.Primary)
+                return;
+
+            BtnWriteUsb.IsEnabled = false;
+            UsbProgressBar.Value = 0;
+            UsbStatusText.Text = "Préparation...";
+
+            var reporter = new UiProgressReporter(mw, "USB", v => DispatcherQueue.TryEnqueue(() => UsbProgressBar.Value = v));
+
+            try
+            {
+                await Task.Run(() => mw.UsbWriterService.WriteIsoToUsbAsync(device.DiskNumber, extractedRoot, reporter));
+                UsbProgressBar.Value = 100;
+                UsbStatusText.Text = "Clé USB bootable créée avec succès.";
+                mw.SetStatus("Clé USB prête");
+            }
+            catch (Exception ex)
+            {
+                string detail = string.IsNullOrEmpty(ex.Message) ? ex.ToString() : ex.Message;
+                UsbStatusText.Text = "Erreur : " + detail;
+                mw.AppendLog("[USB] Échec de la gravure : " + detail);
+                mw.SetStatus("Erreur de gravure USB");
+            }
+            finally
+            {
+                BtnWriteUsb.IsEnabled = true;
             }
         }
     }

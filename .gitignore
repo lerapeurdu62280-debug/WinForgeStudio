@@ -30,3 +30,6 @@ WinForge/Work/
 # OS
 Thumbs.db
 desktop.ini
+
+# Config d'outillage locale (agents/commands/hooks/skills), pas du code projet
+.claude/

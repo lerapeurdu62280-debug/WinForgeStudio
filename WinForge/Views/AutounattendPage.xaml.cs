@@ -90,7 +90,9 @@ public sealed partial class AutounattendPage : Page
             Password = string.IsNullOrEmpty(mw.State.Password) ? null : mw.State.Password,
             AutoLogon = mw.State.AutoLogon,
             SkipOobe = mw.State.SkipOobe,
-            BypassSystemRequirements = mw.State.BypassSystemRequirements
+            BypassSystemRequirements = mw.State.BypassSystemRequirements,
+            AppsToInstall = mw.State.AppsToInstall,
+            HasWallpaper = !string.IsNullOrWhiteSpace(mw.State.WallpaperPath)
         };
 
         string xml = _autounattendService.GenerateXml(options);

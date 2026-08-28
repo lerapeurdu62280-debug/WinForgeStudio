@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="using:WinForge.Models"
     mc:Ignorable="d"
     Title="WinForge Studio">
 
@@ -14,29 +15,37 @@
             <RowDefinition Height="22"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="230"/>
+            <ColumnDefinition Width="200"/>
             <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="260"/>
         </Grid.ColumnDefinitions>
 
-        <Border Grid.Row="0" Grid.ColumnSpan="3" Background="{StaticResource WFPanelBrush}" BorderBrush="{StaticResource WFBorderBrush}" BorderThickness="0,0,0,1">
+        <Border x:Name="AppTitleBar" Grid.Row="0" Grid.ColumnSpan="2" Background="{StaticResource WFPanelBrush}" BorderBrush="{StaticResource WFBorderBrush}" BorderThickness="0,0,0,1">
             <Grid Padding="12,8">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
+                    <!-- Réserve la place des boutons système (minimiser/agrandir/fermer) dessinés
+                         par Windows par-dessus la fenêtre depuis que AppTitleBar sert de titlebar
+                         custom (ExtendsContentIntoTitleBar) : sans cette marge, notre bouton
+                         "Construire" se retrouve sous ces boutons système. -->
+                    <ColumnDefinition Width="140"/>
                 </Grid.ColumnDefinitions>
 
-                <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                    <TextBlock Text="🛠️" FontSize="16" VerticalAlignment="Center"/>
-                    <TextBlock Text="WinForge Studio" Foreground="{StaticResource WFTextBrush}" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                    <Border Width="26" Height="26" CornerRadius="7" VerticalAlignment="Center">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="#4F9DDE" Offset="0"/>
+                                <GradientStop Color="#6AB3E8" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                    </Border>
+                    <TextBlock Text="WinForge Studio" Foreground="{StaticResource WFTextBrush}" FontSize="14.5" FontWeight="SemiBold" VerticalAlignment="Center"/>
                     <TextBlock x:Name="ProjectNameLabel" Text="— S.O.S INFO LUDO" Foreground="{StaticResource WFMuted2Brush}" FontSize="12" VerticalAlignment="Center"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
-                    <Button x:Name="BtnOpenISO" Content="📂 Ouvrir ISO" Style="{StaticResource WFPrimaryButtonStyle}" Click="BtnOpenISO_Click"/>
-                    <Button x:Name="BtnSaveProfile" Content="💾 Sauver profil" Background="{StaticResource WFCardBrush}" Foreground="{StaticResource WFTextBrush}" Padding="12,8" Click="BtnSaveProfile_Click"/>
-                    <Button x:Name="BtnLoadProfile" Content="📂 Charger profil" Background="{StaticResource WFCardBrush}" Foreground="{StaticResource WFTextBrush}" Padding="12,8" Click="BtnLoadProfile_Click"/>
-                    <Button x:Name="BtnGoBuild" Content="⚙ Construire" Background="{StaticResource WFCardBrush}" Foreground="{StaticResource WFTextBrush}" Padding="12,8" Click="BtnGoBuild_Click"/>
+                    <Button x:Name="BtnGoBuild" Content="⚙ Construire" Style="{StaticResource WFPrimaryButtonStyle}" Click="BtnGoBuild_Click"/>
                 </StackPanel>
             </Grid>
         </Border>
@@ -45,75 +54,101 @@
             <Grid Padding="10">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <TextBlock Text="SOURCE ISO" Foreground="{StaticResource WFMuted2Brush}" FontSize="11" Margin="0,0,0,8"/>
-
-                <Border Grid.Row="1" Style="{StaticResource WFCardBorderStyle}" Margin="0,0,0,16">
-                    <StackPanel Spacing="4">
-                        <TextBlock x:Name="IsoNameLabel" Text="Aucune ISO chargée" Foreground="{StaticResource WFTextBrush}" FontSize="13" FontWeight="SemiBold"/>
-                        <TextBlock x:Name="IsoVersionLabel" Text="Version : —" Foreground="{StaticResource WFMutedBrush}" FontSize="11"/>
-                        <TextBlock x:Name="IsoSizeLabel" Text="Taille : —" Foreground="{StaticResource WFMutedBrush}" FontSize="11"/>
-                        <ComboBox x:Name="EditionComboBox" Header="Édition Windows" Width="260" IsEnabled="False" SelectionChanged="EditionComboBox_SelectionChanged" DisplayMemberPath="Name"/>
-                    </StackPanel>
-                </Border>
-
-                <StackPanel Grid.Row="2" Spacing="6">
-                    <TextBlock Text="MODULES" Foreground="{StaticResource WFMuted2Brush}" FontSize="11" Margin="0,0,0,6"/>
-                    <Button x:Name="NavDebloat" Content="🧹 Debloating" Style="{StaticResource WFNavButtonStyle}" Click="NavDebloat_Click"/>
-                    <Button x:Name="NavOptim" Content="⚡ Optimisation" Style="{StaticResource WFNavButtonStyle}" Click="NavOptim_Click"/>
-                    <Button x:Name="NavInject" Content="💉 Injection" Style="{StaticResource WFNavButtonStyle}" Click="NavInject_Click"/>
-                    <Button x:Name="NavUnattend" Content="📄 Autounattend" Style="{StaticResource WFNavButtonStyle}" Click="NavUnattend_Click"/>
-                    <Button x:Name="NavBuild" Content="📦 Export ISO" Style="{StaticResource WFNavButtonStyle}" Click="NavBuild_Click"/>
-                </StackPanel>
-
-                <StackPanel Grid.Row="3" Spacing="6">
-                    <TextBlock Text="PROFIL ACTIF" Foreground="{StaticResource WFMuted2Brush}" FontSize="11"/>
-                    <ComboBox x:Name="ProfileSelector" PlaceholderText="Aucun profil chargé"/>
+                <StackPanel Grid.Row="0" Spacing="6">
+                    <TextBlock Text="MODULES" Style="{StaticResource WFSectionLabelStyle}" Margin="0,0,0,6"/>
+                    <Button x:Name="NavEditions" Style="{StaticResource WFNavButtonStyle}" Click="NavEditions_Click">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="◧" FontFamily="Consolas" Width="16" TextAlignment="Center"/>
+                            <TextBlock Text="Éditions"/>
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="NavDebloat" Style="{StaticResource WFNavButtonStyle}" Click="NavDebloat_Click">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="✕" FontFamily="Consolas" Width="16" TextAlignment="Center"/>
+                            <TextBlock Text="Debloating"/>
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="NavOptim" Style="{StaticResource WFNavButtonStyle}" Click="NavOptim_Click">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="⚙" FontFamily="Consolas" Width="16" TextAlignment="Center"/>
+                            <TextBlock Text="Optimisation"/>
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="NavApps" Style="{StaticResource WFNavButtonStyle}" Click="NavApps_Click">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="▤" FontFamily="Consolas" Width="16" TextAlignment="Center"/>
+                            <TextBlock Text="Applications"/>
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="NavInject" Style="{StaticResource WFNavButtonStyle}" Click="NavInject_Click">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="+" FontFamily="Consolas" FontWeight="Bold" Width="16" TextAlignment="Center"/>
+                            <TextBlock Text="Injection"/>
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="NavUnattend" Style="{StaticResource WFNavButtonStyle}" Click="NavUnattend_Click">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="≡" FontFamily="Consolas" Width="16" TextAlignment="Center"/>
+                            <TextBlock Text="Autounattend"/>
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="NavBuild" Style="{StaticResource WFNavButtonStyle}" Click="NavBuild_Click">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="⇩" FontFamily="Consolas" Width="16" TextAlignment="Center"/>
+                            <TextBlock Text="Export ISO"/>
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
             </Grid>
         </Border>
 
-        <Frame x:Name="ModuleFrame" Grid.Row="1" Grid.Column="1"/>
+        <Grid Grid.Row="1" Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-        <Border Grid.Row="1" Grid.Column="2" Background="{StaticResource WFPanelBrush}" BorderBrush="{StaticResource WFBorderBrush}" BorderThickness="1,0,0,0">
-            <ScrollViewer>
-                <StackPanel Padding="10" Spacing="10">
-                    <TextBlock Text="APERÇU" Foreground="{StaticResource WFMuted2Brush}" FontSize="11"/>
-                    <TextBlock x:Name="EstimatedSizeLabel" Text="Taille estimée : —" Foreground="{StaticResource WFTextBrush}"/>
-                    <TextBlock x:Name="SelectionCountLabel" Text="0 élément sélectionné" Foreground="{StaticResource WFMutedBrush}"/>
+            <Frame x:Name="ModuleFrame" Grid.Row="0"/>
 
-                    <TextBlock Text="PROGRESSION" Foreground="{StaticResource WFMuted2Brush}" FontSize="11" Margin="0,8,0,0"/>
-                    <TextBlock Text="Debloat" Foreground="{StaticResource WFMutedBrush}"/>
-                    <ProgressBar x:Name="DebloatProgress" Minimum="0" Maximum="100"/>
-                    <TextBlock Text="Injection" Foreground="{StaticResource WFMutedBrush}"/>
-                    <ProgressBar x:Name="InjectProgress" Minimum="0" Maximum="100"/>
-                    <TextBlock Text="Mises à jour" Foreground="{StaticResource WFMutedBrush}"/>
-                    <ProgressBar x:Name="UpdateProgress" Minimum="0" Maximum="100"/>
-
-                    <TextBlock Text="OPTIONS GLOBALES" Foreground="{StaticResource WFMuted2Brush}" FontSize="11" Margin="0,8,0,0"/>
-                    <ToggleSwitch x:Name="GlobalTelemetryToggle" Header="Télémétrie" Toggled="GlobalOptimToggle_Toggled"/>
-                    <ToggleSwitch x:Name="GlobalCortanaToggle" Header="Cortana" Toggled="GlobalOptimToggle_Toggled"/>
-                    <ToggleSwitch x:Name="GlobalServicesToggle" Header="Services" Toggled="GlobalOptimToggle_Toggled"/>
-                    <ToggleSwitch x:Name="GlobalPerfToggle" Header="Performance" Toggled="GlobalOptimToggle_Toggled"/>
-
-                    <TextBlock Text="JOURNAL" Foreground="{StaticResource WFMuted2Brush}" FontSize="11" Margin="0,8,0,0"/>
-                    <TextBox x:Name="LogText" Height="260" AcceptsReturn="True" TextWrapping="Wrap" IsReadOnly="True"/>
+            <!-- Panneau journal : reprend le "log strip" de la maquette (timestamp discret + tag
+                 en accent), placé sous le contenu du module actif plutôt que noyé dans le panneau
+                 latéral droit avec la progression et les options globales. -->
+            <Border Grid.Row="1" Background="{StaticResource WFPanelBrush}" BorderBrush="{StaticResource WFBorderBrush}" BorderThickness="0,1,0,0">
+                <StackPanel>
+                    <TextBlock Text="JOURNAL" Style="{StaticResource WFSectionLabelStyle}" Margin="16,8,0,6"/>
+                    <ListView x:Name="LogListView" ItemsSource="{x:Bind LogEntries}" Height="96" Padding="8,0,8,8"
+                              SelectionMode="None" IsItemClickEnabled="False" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="Padding" Value="8,2"/>
+                                <Setter Property="MinHeight" Value="0"/>
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="models:LogEntry">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Text="{x:Bind TimestampText}" FontFamily="Consolas" FontSize="11" Foreground="{StaticResource WFMuted2Brush}"/>
+                                    <TextBlock Text="{x:Bind Tag}" FontFamily="Consolas" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource WFAccentBrush}" Visibility="{x:Bind HasTagVisibility}"/>
+                                    <TextBlock Text="{x:Bind Message}" FontFamily="Consolas" FontSize="11" Foreground="{StaticResource WFMutedBrush}" TextTrimming="CharacterEllipsis"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
                 </StackPanel>
-            </ScrollViewer>
-        </Border>
+            </Border>
+        </Grid>
 
-        <Border Grid.Row="2" Grid.ColumnSpan="3" Background="{StaticResource WFAccentBrush}">
-            <Grid Padding="8,0">
+        <Border Grid.Row="2" Grid.ColumnSpan="2" Background="{StaticResource WFPanelBrush}" BorderBrush="{StaticResource WFBorderBrush}" BorderThickness="0,1,0,0">
+            <Grid Padding="12,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock x:Name="StatusLabel" Text="Prêt" Foreground="White" VerticalAlignment="Center"/>
-                <TextBlock Grid.Column="1" Text="WinForge Studio" Foreground="White" VerticalAlignment="Center"/>
+                <TextBlock x:Name="StatusLabel" Text="Prêt" FontFamily="Consolas" FontSize="11" Foreground="{StaticResource WFMutedBrush}" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1" Text="WinForge Studio" FontFamily="Consolas" FontSize="11" Foreground="{StaticResource WFMuted2Brush}" VerticalAlignment="Center"/>
             </Grid>
         </Border>
     </Grid>

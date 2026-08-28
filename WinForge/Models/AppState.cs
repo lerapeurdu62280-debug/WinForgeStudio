@@ -30,4 +30,10 @@ public class AppState
     public bool DisableCortana { get; set; }
     public bool OptimizeServices { get; set; }
     public bool PerformanceMode { get; set; }
+
+    // Apps installées au premier démarrage (winget silencieux + installeurs .exe/.msi maison).
+    public List<AppInstallEntry> AppsToInstall { get; set; } = new();
+
+    // Image remplaçant le fond d'écran par défaut de Windows (appliquée offline, pendant le montage WIM).
+    public string? WallpaperPath { get; set; }
 }
