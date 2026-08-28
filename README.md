@@ -2,6 +2,7 @@
 
 Application Windows (WinUI 3 / .NET 8) pour construire des images ISO Windows personnalisées, de bout en bout : debloat, optimisation registre, injection de pilotes, autounattend et export bootable.
 
+[![Release](https://img.shields.io/badge/release-v1.0.0-informational)](https://github.com/lerapeurdu62280-debug/WinForgeStudio/releases/tag/v1.0.0)
 ![Plateforme](https://img.shields.io/badge/plateforme-Windows%2010%2F11-0078D4)
 ![.NET](https://img.shields.io/badge/.NET-8-512BD4)
 ![UI](https://img.shields.io/badge/UI-WinUI%203-5C2D91)
@@ -61,6 +62,8 @@ dotnet build WinForgeStudio.slnx -p:Platform=x64
 ```
 
 Le projet cible `net8.0-windows10.0.19041.0` et supporte les plateformes **x86**, **x64** et **ARM64**.
+
+Aucun binaire précompilé n'est fourni : voir la [release v1.0.0](https://github.com/lerapeurdu62280-debug/WinForgeStudio/releases/tag/v1.0.0) pour le code source figé de la dernière version stable.
 
 ## Structure du projet
 
