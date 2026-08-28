@@ -227,14 +227,19 @@ public class AutounattendService
         return Task.CompletedTask;
     }
 
-    // Chemin du build de WinForge Assistant (projet séparé, voir C:\Dev\WinForgeAssistant\README.md).
+    // Chemin du build de WinForge Assistant (projet compagnon séparé, non fourni dans ce dépôt).
     // Publié via : dotnet publish -c Release -p:Platform=x64 -r win-x64 --self-contained true
-    // WindowsAppSDKSelfContained volontairement PAS activé (voir WinForgeAssistant.csproj) : casse
-    // le chargement CsWinRT sur le SDK 2.3.1 avec .NET 8 (TypeLoadException sur ComInterfaceEntry,
-    // reproduit de façon stable). Le Windows App SDK Runtime est donc installé séparément, via le
-    // redistribuable officiel Microsoft, avant le premier lancement de l'assistant.
-    private const string AssistantPublishDir = @"C:\Dev\WinForgeAssistant\WinForgeAssistant\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish";
-    private const string AssistantRuntimeInstallerPath = @"C:\Dev\WinForgeAssistant\Redist\WindowsAppRuntimeInstall-x64.exe";
+    // WindowsAppSDKSelfContained volontairement PAS activé côté Assistant (casse le chargement
+    // CsWinRT sur le SDK 2.3.1 avec .NET 8, TypeLoadException sur ComInterfaceEntry, reproduit de
+    // façon stable) : le Windows App SDK Runtime est donc installé séparément, via le redistribuable
+    // officiel Microsoft, avant le premier lancement de l'assistant.
+    //
+    // Chemins configurables via variables d'environnement (même pattern que WINFORGE_OSCDIMG_PATH
+    // dans AdkDetectionService) — chaque poste ayant sa propre installation du projet Assistant.
+    private static string AssistantPublishDir =>
+        Environment.GetEnvironmentVariable("WINFORGE_ASSISTANT_PUBLISH_DIR") ?? "";
+    private static string AssistantRuntimeInstallerPath =>
+        Environment.GetEnvironmentVariable("WINFORGE_ASSISTANT_RUNTIME_INSTALLER") ?? "";
     private const string OemAssistantRelativeDir = @"$OEM$\$1\Setup\Scripts\Assistant";
 
     // Copie le build de WinForge Assistant (+ le redistribuable Windows App SDK Runtime) dans l'ISO
@@ -246,8 +251,10 @@ public class AutounattendService
     {
         if (!Directory.Exists(AssistantPublishDir))
         {
-            reporter.Log($"WinForge Assistant introuvable ({AssistantPublishDir}), non inclus dans l'ISO. " +
-                "Publier le projet avec : dotnet publish -c Release -p:Platform=x64 -r win-x64 --self-contained true");
+            reporter.Log("WinForge Assistant non inclus dans l'ISO : variable d'environnement " +
+                "WINFORGE_ASSISTANT_PUBLISH_DIR absente ou introuvable. Publier le projet compagnon " +
+                "avec : dotnet publish -c Release -p:Platform=x64 -r win-x64 --self-contained true, " +
+                "puis définir WINFORGE_ASSISTANT_PUBLISH_DIR vers le dossier publish.");
             return Task.CompletedTask;
         }
 
@@ -271,8 +278,9 @@ public class AutounattendService
         }
         else
         {
-            reporter.Log($"Redistribuable Windows App SDK Runtime introuvable ({AssistantRuntimeInstallerPath}) : " +
-                "l'assistant risque de ne pas se lancer sur une machine sans ce runtime déjà installé.");
+            reporter.Log("Redistribuable Windows App SDK Runtime introuvable (variable d'environnement " +
+                "WINFORGE_ASSISTANT_RUNTIME_INSTALLER absente ou introuvable) : l'assistant risque de ne " +
+                "pas se lancer sur une machine sans ce runtime déjà installé.");
         }
 
         return Task.CompletedTask;

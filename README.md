@@ -36,6 +36,17 @@ ISO source  →  montage WIM  →  Debloat + Optimisation + Injection
 
 Toute la configuration (apps cochées, options d'autounattend, chemins de pilotes…) est centralisée dans un état applicatif unique, restauré à chaque changement de page — aucun réglage ne se perd en naviguant entre les modules avant de lancer la construction.
 
+## WinForge Assistant (optionnel)
+
+Au premier démarrage, l'ISO peut lancer **WinForge Assistant**, un compagnon qui installe les applications personnalisées sélectionnées dans le contexte réel de la session utilisateur (contrairement à `FirstLogonCommands` seul, exécuté avant qu'un profil utilisateur complet n'existe). C'est un projet séparé, non fourni dans ce dépôt. Pour l'activer, publier le compagnon puis définir deux variables d'environnement avant de lancer un build :
+
+```
+WINFORGE_ASSISTANT_PUBLISH_DIR=<chemin du dossier publish de l'assistant>
+WINFORGE_ASSISTANT_RUNTIME_INSTALLER=<chemin vers WindowsAppRuntimeInstall-x64.exe>
+```
+
+Sans ces variables, WinForge Studio fonctionne normalement — l'assistant est simplement omis de l'ISO produite.
+
 ## Prérequis
 
 - Windows 10/11
@@ -73,4 +84,4 @@ Pipeline complet fonctionnel, validé de bout en bout par une installation réel
 
 ## Licence
 
-Aucune licence définie pour le moment.
+Tous droits réservés © S.O.S INFO LUDO. Ce dépôt est mis à disposition à titre de consultation ; toute réutilisation, modification, redistribution ou usage commercial du code nécessite une autorisation préalable.
