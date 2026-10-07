@@ -58,20 +58,9 @@ namespace WinForge.Models
                     }
                 },
 
-                // ══════════════════════════════
-                // TÉLÉMÉTRIE & DIAGNOSTICS
-                // ══════════════════════════════
-                new AppEntry
-                {
-                    Name = "Télémétrie & Diagnostics", IsCategory = true, Risk = RiskLevel.Medium,
-                    Children = new ObservableCollection<AppEntry>
-                    {
-                        new AppEntry { Name = "Feedback Hub", PackageName = "Microsoft.WindowsFeedbackHub", Risk = RiskLevel.Safe, Description = "Envoi de retours à Microsoft" },
-                        new AppEntry { Name = "DiagTrack (Télémétrie)", PackageName = "DiagTrack", Risk = RiskLevel.Medium, Description = "Service de collecte de données" },
-                        new AppEntry { Name = "Customer Experience", PackageName = "SqmClient", Risk = RiskLevel.Medium, Description = "Programme amélioration expérience" },
-                        new AppEntry { Name = "Error Reporting", PackageName = "WerSvc", Risk = RiskLevel.Medium, Description = "Rapport d'erreurs Windows" },
-                    }
-                },
+                // La télémétrie (services DiagTrack, WerSvc...) n'est pas ici : Debloat ne retire que
+                // des applications provisionnées, ces entrées étaient ignorées en silence au build.
+                // Elle se règle dans la page Optimisation (registre de l'image hors ligne).
 
                 // ══════════════════════════════
                 // APPLICATIONS MULTIMÉDIA
@@ -99,6 +88,7 @@ namespace WinForge.Models
                     Children = new ObservableCollection<AppEntry>
                     {
                         new AppEntry { Name = "Get Help", PackageName = "Microsoft.GetHelp", Risk = RiskLevel.Safe, Description = "Application d'aide Microsoft" },
+                        new AppEntry { Name = "Feedback Hub", PackageName = "Microsoft.WindowsFeedbackHub", Risk = RiskLevel.Safe, Description = "Envoi de retours à Microsoft" },
                         new AppEntry { Name = "Tips (Astuces)", PackageName = "Microsoft.Getstarted", Risk = RiskLevel.Safe, Description = "Conseils pour débutants" },
                         new AppEntry { Name = "Maps", PackageName = "Microsoft.WindowsMaps", Risk = RiskLevel.Safe, Description = "Cartes Windows" },
                         new AppEntry { Name = "People", PackageName = "Microsoft.People", Risk = RiskLevel.Safe, Description = "Application Contacts" },
